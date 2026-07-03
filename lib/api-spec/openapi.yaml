@@ -1,0 +1,1476 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: InstaRips API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: items
+    description: Collectible items
+  - name: rips
+    description: Rip events
+  - name: spots
+    description: Spots within a rip
+  - name: packs
+    description: Pack configurations
+  - name: cardPackRips
+    description: Card pack rip mystery boxes
+  - name: instaRips
+    description: Insta rip mystery packs
+  - name: admin
+    description: Admin operations
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /items:
+    get:
+      operationId: listItems
+      tags: [items]
+      summary: List all items
+      responses:
+        "200":
+          description: List of items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Item"
+    post:
+      operationId: createItem
+      tags: [items]
+      summary: Create a new item (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+
+  /items/{id}/cards:
+    get:
+      operationId: listItemCards
+      tags: [items]
+      summary: List cards attached to an item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Card"
+    post:
+      operationId: addItemCard
+      tags: [items]
+      summary: Add a card to an item (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardInput"
+      responses:
+        "201":
+          description: Created card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+
+  /items/{id}/cards/{cardId}:
+    delete:
+      operationId: deleteItemCard
+      tags: [items]
+      summary: Remove a card from an item (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /items/{id}:
+    get:
+      operationId: getItem
+      tags: [items]
+      summary: Get a single item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+    put:
+      operationId: updateItem
+      tags: [items]
+      summary: Update an item (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemInput"
+      responses:
+        "200":
+          description: Updated item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+    delete:
+      operationId: deleteItem
+      tags: [items]
+      summary: Delete an item (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /rips:
+    get:
+      operationId: listRips
+      tags: [rips]
+      summary: List rips, optionally filtered by status
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending, active, spinning, completed]
+      responses:
+        "200":
+          description: List of rips
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Rip"
+    post:
+      operationId: createRip
+      tags: [rips]
+      summary: Create a rip event (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RipInput"
+      responses:
+        "201":
+          description: Created rip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rip"
+
+  /rips/{id}:
+    get:
+      operationId: getRip
+      tags: [rips]
+      summary: Get a rip with item and spot summary
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Rip detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RipDetail"
+    put:
+      operationId: updateRip
+      tags: [rips]
+      summary: Update a rip (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RipUpdate"
+      responses:
+        "200":
+          description: Updated rip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rip"
+    delete:
+      operationId: deleteRip
+      tags: [rips]
+      summary: Delete a rip (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /rips/{id}/cards:
+    get:
+      operationId: listRipCards
+      tags: [rips]
+      summary: List cards attached to a rip
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Card"
+    post:
+      operationId: addRipCard
+      tags: [rips]
+      summary: Add a card to a rip (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardInput"
+      responses:
+        "201":
+          description: Created card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+
+  /rips/{id}/cards/{cardId}:
+    delete:
+      operationId: deleteRipCard
+      tags: [rips]
+      summary: Remove a card from a rip (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /rips/{id}/spin:
+    post:
+      operationId: spinRip
+      tags: [rips]
+      summary: Trigger the wheel spin to pick a winner (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Spin result with winner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpinResult"
+
+  /rips/{id}/spots:
+    get:
+      operationId: listSpots
+      tags: [spots]
+      summary: List all spots for a rip
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of spots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Spot"
+    post:
+      operationId: buySpots
+      tags: [spots]
+      summary: Buy one or more spots in a rip
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpotPurchase"
+      responses:
+        "201":
+          description: Purchased spots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Spot"
+
+  /packs:
+    get:
+      operationId: listPacks
+      tags: [packs]
+      summary: List all pack configurations
+      responses:
+        "200":
+          description: List of packs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pack"
+    post:
+      operationId: createPack
+      tags: [packs]
+      summary: Create a pack configuration (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackInput"
+      responses:
+        "201":
+          description: Created pack
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pack"
+
+  /packs/{id}:
+    put:
+      operationId: updatePack
+      tags: [packs]
+      summary: Update a pack configuration (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackInput"
+      responses:
+        "200":
+          description: Updated pack
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pack"
+    delete:
+      operationId: deletePack
+      tags: [packs]
+      summary: Delete a pack configuration (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /card-pack-rips:
+    get:
+      operationId: listCardPackRips
+      tags: [cardPackRips]
+      summary: List all card pack rips
+      responses:
+        "200":
+          description: List of card pack rips
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CardPackRip"
+    post:
+      operationId: createCardPackRip
+      tags: [cardPackRips]
+      summary: Create a card pack rip (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardPackRipInput"
+      responses:
+        "201":
+          description: Created card pack rip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardPackRip"
+
+  /card-pack-rips/{id}:
+    get:
+      operationId: getCardPackRip
+      tags: [cardPackRips]
+      summary: Get a card pack rip with its entries
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Card pack rip detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardPackRip"
+    put:
+      operationId: updateCardPackRip
+      tags: [cardPackRips]
+      summary: Update a card pack rip (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardPackRipInput"
+      responses:
+        "200":
+          description: Updated card pack rip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardPackRip"
+    delete:
+      operationId: deleteCardPackRip
+      tags: [cardPackRips]
+      summary: Delete a card pack rip (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /card-pack-rips/{id}/open:
+    post:
+      operationId: openCardPackRip
+      tags: [cardPackRips]
+      summary: Open a card pack rip and receive a random item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardPackRipOpenRequest"
+      responses:
+        "200":
+          description: Result of opening the pack
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardPackRipOpenResult"
+
+  /insta-rips:
+    get:
+      operationId: listInstaRips
+      tags: [instaRips]
+      summary: List all insta rips
+      responses:
+        "200":
+          description: List of insta rips
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InstaRip"
+    post:
+      operationId: createInstaRip
+      tags: [instaRips]
+      summary: Create an insta rip (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstaRipInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstaRip"
+
+  /insta-rips/{id}:
+    get:
+      operationId: getInstaRip
+      tags: [instaRips]
+      summary: Get an insta rip with its cards
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: InstaRip detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstaRip"
+    put:
+      operationId: updateInstaRip
+      tags: [instaRips]
+      summary: Update an insta rip (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstaRipInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstaRip"
+    delete:
+      operationId: deleteInstaRip
+      tags: [instaRips]
+      summary: Delete an insta rip (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /insta-rips/{id}/cards:
+    get:
+      operationId: listInstaRipCards
+      tags: [instaRips]
+      summary: List cards in an insta rip
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of insta rip cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InstaRipCard"
+    post:
+      operationId: addInstaRipCard
+      tags: [instaRips]
+      summary: Add a card to an insta rip (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstaRipCardInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstaRipCard"
+
+  /insta-rips/{id}/cards/{cardId}:
+    put:
+      operationId: updateInstaRipCard
+      tags: [instaRips]
+      summary: Update a card in an insta rip (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstaRipCardInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstaRipCard"
+    delete:
+      operationId: deleteInstaRipCard
+      tags: [instaRips]
+      summary: Remove a card from an insta rip (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /insta-rips/{id}/open:
+    post:
+      operationId: openInstaRip
+      tags: [instaRips]
+      summary: Open an insta rip and receive a random card
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstaRipOpenRequest"
+      responses:
+        "200":
+          description: Result of opening the pack
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstaRipOpenResult"
+
+  /admin/dashboard:
+    get:
+      operationId: getAdminDashboard
+      tags: [admin]
+      summary: Get admin dashboard stats
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDashboard"
+
+components:
+  schemas:
+    InstaRip:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        cost:
+          type: number
+        isActive:
+          type: boolean
+        commonOdds:
+          type: integer
+          description: Percentage chance of hitting a common card (0-100)
+        rareOdds:
+          type: integer
+          description: Percentage chance of hitting a rare card (0-100)
+        chaseOdds:
+          type: integer
+          description: Percentage chance of hitting a chase card (0-100)
+        totalOpened:
+          type: integer
+        cards:
+          type: array
+          items:
+            $ref: "#/components/schemas/InstaRipCard"
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - description
+        - cost
+        - isActive
+        - commonOdds
+        - rareOdds
+        - chaseOdds
+        - totalOpened
+        - cards
+        - createdAt
+
+    InstaRipCard:
+      type: object
+      properties:
+        id:
+          type: integer
+        instaRipId:
+          type: integer
+        playerName:
+          type: string
+        year:
+          type: string
+        cardSet:
+          type: string
+        cardNumber:
+          type: string
+        rarity:
+          type: string
+          enum: [common, rare, chase]
+        marketPrice:
+          type: number
+        imageUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - instaRipId
+        - playerName
+        - year
+        - cardSet
+        - cardNumber
+        - rarity
+        - marketPrice
+        - imageUrl
+        - createdAt
+
+    InstaRipInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        cost:
+          type: number
+        isActive:
+          type: boolean
+        commonOdds:
+          type: integer
+        rareOdds:
+          type: integer
+        chaseOdds:
+          type: integer
+      required:
+        - name
+        - description
+        - cost
+        - isActive
+        - commonOdds
+        - rareOdds
+        - chaseOdds
+
+    InstaRipCardInput:
+      type: object
+      properties:
+        playerName:
+          type: string
+        year:
+          type: string
+        cardSet:
+          type: string
+        cardNumber:
+          type: string
+        rarity:
+          type: string
+          enum: [common, rare, chase]
+        marketPrice:
+          type: number
+        imageUrl:
+          type: ["string", "null"]
+      required:
+        - playerName
+        - year
+        - cardSet
+        - cardNumber
+        - rarity
+        - marketPrice
+
+    InstaRipOpenRequest:
+      type: object
+      properties:
+        userName:
+          type: string
+      required:
+        - userName
+
+    InstaRipOpenResult:
+      type: object
+      properties:
+        instaRipId:
+          type: integer
+        userName:
+          type: string
+        hitCard:
+          $ref: "#/components/schemas/InstaRipCard"
+        hitRarity:
+          type: string
+          enum: [common, rare, chase]
+        openedAt:
+          type: string
+      required:
+        - instaRipId
+        - userName
+        - hitCard
+        - hitRarity
+        - openedAt
+
+    Card:
+      type: object
+      properties:
+        id:
+          type: integer
+        playerName:
+          type: string
+        year:
+          type: string
+        set:
+          type: string
+        cardNumber:
+          type: string
+        description:
+          type: string
+        rarity:
+          type: string
+          enum: [common, uncommon, rare, ultra-rare, legendary]
+        imageUrl:
+          type: ["string", "null"]
+        itemId:
+          type: ["integer", "null"]
+        ripId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - playerName
+        - year
+        - set
+        - cardNumber
+        - description
+        - rarity
+        - imageUrl
+        - itemId
+        - ripId
+        - createdAt
+
+    CardInput:
+      type: object
+      properties:
+        playerName:
+          type: string
+        year:
+          type: string
+        set:
+          type: string
+        cardNumber:
+          type: string
+        description:
+          type: string
+        rarity:
+          type: string
+          enum: [common, uncommon, rare, ultra-rare, legendary]
+        imageUrl:
+          type: ["string", "null"]
+      required:
+        - playerName
+        - year
+        - set
+        - cardNumber
+        - description
+        - rarity
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Item:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        estimatedValue:
+          type: number
+        category:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - description
+        - imageUrl
+        - estimatedValue
+        - category
+        - createdAt
+
+    ItemInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        estimatedValue:
+          type: number
+        category:
+          type: string
+      required:
+        - name
+        - description
+        - estimatedValue
+        - category
+
+    Rip:
+      type: object
+      properties:
+        id:
+          type: integer
+        itemId:
+          type: integer
+        itemName:
+          type: string
+        itemImageUrl:
+          type: ["string", "null"]
+        itemEstimatedValue:
+          type: number
+        spotCount:
+          type: integer
+        spotPrice:
+          type: number
+        spotsSold:
+          type: integer
+        status:
+          type: string
+          enum: [pending, active, spinning, completed]
+        winnerName:
+          type: ["string", "null"]
+        winnerSlot:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - itemId
+        - itemName
+        - itemImageUrl
+        - itemEstimatedValue
+        - spotCount
+        - spotPrice
+        - spotsSold
+        - status
+        - winnerName
+        - winnerSlot
+        - createdAt
+
+    RipDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        itemId:
+          type: integer
+        itemName:
+          type: string
+        itemImageUrl:
+          type: ["string", "null"]
+        itemEstimatedValue:
+          type: number
+        itemCategory:
+          type: string
+        itemDescription:
+          type: string
+        spotCount:
+          type: integer
+        spotPrice:
+          type: number
+        spotsSold:
+          type: integer
+        status:
+          type: string
+          enum: [pending, active, spinning, completed]
+        winnerName:
+          type: ["string", "null"]
+        winnerSlot:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+        spots:
+          type: array
+          items:
+            $ref: "#/components/schemas/Spot"
+      required:
+        - id
+        - itemId
+        - itemName
+        - itemImageUrl
+        - itemEstimatedValue
+        - itemCategory
+        - itemDescription
+        - spotCount
+        - spotPrice
+        - spotsSold
+        - status
+        - winnerName
+        - winnerSlot
+        - createdAt
+        - spots
+
+    RipInput:
+      type: object
+      properties:
+        itemId:
+          type: integer
+        spotCount:
+          type: integer
+        spotPrice:
+          type: number
+        status:
+          type: string
+          enum: [pending, active]
+      required:
+        - itemId
+        - spotCount
+        - spotPrice
+
+    RipUpdate:
+      type: object
+      properties:
+        itemId:
+          type: integer
+        spotCount:
+          type: integer
+        spotPrice:
+          type: number
+        status:
+          type: string
+          enum: [pending, active, spinning, completed]
+
+    Spot:
+      type: object
+      properties:
+        id:
+          type: integer
+        ripId:
+          type: integer
+        userName:
+          type: string
+        slotNumber:
+          type: integer
+        purchasedAt:
+          type: string
+        isWinner:
+          type: boolean
+      required:
+        - id
+        - ripId
+        - userName
+        - slotNumber
+        - purchasedAt
+        - isWinner
+
+    SpotPurchase:
+      type: object
+      properties:
+        userName:
+          type: string
+        quantity:
+          type: integer
+      required:
+        - userName
+        - quantity
+
+    SpinResult:
+      type: object
+      properties:
+        ripId:
+          type: integer
+        winnerSlot:
+          type: integer
+        winnerName:
+          type: string
+        allSlots:
+          type: array
+          items:
+            type: string
+      required:
+        - ripId
+        - winnerSlot
+        - winnerName
+        - allSlots
+
+    Pack:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        spotCount:
+          type: integer
+        price:
+          type: number
+        discount:
+          type: number
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - spotCount
+        - price
+        - discount
+        - isActive
+        - createdAt
+
+    PackInput:
+      type: object
+      properties:
+        name:
+          type: string
+        spotCount:
+          type: integer
+        price:
+          type: number
+        isActive:
+          type: boolean
+      required:
+        - name
+        - spotCount
+        - price
+        - isActive
+
+    CardPackRipEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        itemId:
+          type: integer
+        itemName:
+          type: string
+        itemImageUrl:
+          type: ["string", "null"]
+        itemEstimatedValue:
+          type: number
+        itemCategory:
+          type: string
+        weight:
+          type: integer
+          description: Relative weight for random selection (higher = more likely)
+        rarity:
+          type: string
+          enum: [common, uncommon, rare, ultra-rare, legendary]
+      required:
+        - id
+        - itemId
+        - itemName
+        - itemImageUrl
+        - itemEstimatedValue
+        - itemCategory
+        - weight
+        - rarity
+
+    CardPackRip:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        isActive:
+          type: boolean
+        totalOpened:
+          type: integer
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/CardPackRipEntry"
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - description
+        - price
+        - isActive
+        - totalOpened
+        - entries
+        - createdAt
+
+    CardPackRipEntryInput:
+      type: object
+      properties:
+        itemId:
+          type: integer
+        weight:
+          type: integer
+        rarity:
+          type: string
+          enum: [common, uncommon, rare, ultra-rare, legendary]
+      required:
+        - itemId
+        - weight
+        - rarity
+
+    CardPackRipInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        isActive:
+          type: boolean
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/CardPackRipEntryInput"
+      required:
+        - name
+        - description
+        - price
+        - isActive
+        - entries
+
+    CardPackRipOpenRequest:
+      type: object
+      properties:
+        userName:
+          type: string
+      required:
+        - userName
+
+    CardPackRipOpenResult:
+      type: object
+      properties:
+        cardPackRipId:
+          type: integer
+        userName:
+          type: string
+        hitItemId:
+          type: integer
+        hitItemName:
+          type: string
+        hitItemImageUrl:
+          type: ["string", "null"]
+        hitItemEstimatedValue:
+          type: number
+        hitItemCategory:
+          type: string
+        hitRarity:
+          type: string
+          enum: [common, uncommon, rare, ultra-rare, legendary]
+        openedAt:
+          type: string
+      required:
+        - cardPackRipId
+        - userName
+        - hitItemId
+        - hitItemName
+        - hitItemImageUrl
+        - hitItemEstimatedValue
+        - hitItemCategory
+        - hitRarity
+        - openedAt
+
+    AdminDashboard:
+      type: object
+      properties:
+        activeRips:
+          type: integer
+        totalRips:
+          type: integer
+        totalSpotsSold:
+          type: integer
+        totalRevenue:
+          type: number
+        recentRips:
+          type: array
+          items:
+            $ref: "#/components/schemas/Rip"
+      required:
+        - activeRips
+        - totalRips
+        - totalSpotsSold
+        - totalRevenue
+        - recentRips
